@@ -1,0 +1,9 @@
+c:\users\jmsch\source\repos\BugsSniffer\BugsSniffer.Api\bin\Release\netstandard2.0\BugsSniffer.Api.deps.json
+c:\users\jmsch\source\repos\BugsSniffer\BugsSniffer.Api\bin\Release\netstandard2.0\BugsSniffer.Api.dll
+c:\users\jmsch\source\repos\BugsSniffer\BugsSniffer.Api\bin\Release\netstandard2.0\BugsSniffer.Api.pdb
+c:\users\jmsch\source\repos\BugsSniffer\BugsSniffer.Api\obj\Release\netstandard2.0\BugsSniffer.Api.csprojAssemblyReference.cache
+c:\users\jmsch\source\repos\BugsSniffer\BugsSniffer.Api\obj\Release\netstandard2.0\BugsSniffer.Api.csproj.CoreCompileInputs.cache
+c:\users\jmsch\source\repos\BugsSniffer\BugsSniffer.Api\obj\Release\netstandard2.0\BugsSniffer.Api.AssemblyInfoInputs.cache
+c:\users\jmsch\source\repos\BugsSniffer\BugsSniffer.Api\obj\Release\netstandard2.0\BugsSniffer.Api.AssemblyInfo.cs
+c:\users\jmsch\source\repos\BugsSniffer\BugsSniffer.Api\obj\Release\netstandard2.0\BugsSniffer.Api.dll
+c:\users\jmsch\source\repos\BugsSniffer\BugsSniffer.Api\obj\Release\netstandard2.0\BugsSniffer.Api.pdb

@@ -1,0 +1,81 @@
+{
+  "runtimeTarget": {
+    "name": ".NETStandard,Version=v2.0/",
+    "signature": "2b1f109558d2bf4791ed871140d95bb0ba5e43f6"
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETStandard,Version=v2.0": {},
+    ".NETStandard,Version=v2.0/": {
+      "BugsSniffer.Api/1.0.0": {
+        "dependencies": {
+          "NETStandard.Library": "2.0.3",
+          "SharpPcap": "4.5.0"
+        },
+        "runtime": {
+          "BugsSniffer.Api.dll": {}
+        }
+      },
+      "Microsoft.NETCore.Platforms/1.1.0": {},
+      "NETStandard.Library/2.0.3": {
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "1.1.0"
+        }
+      },
+      "PacketDotNet/0.16.0": {
+        "runtime": {
+          "lib/PacketDotNet.dll": {
+            "assemblyVersion": "0.16.0.0",
+            "fileVersion": "0.16.0.0"
+          }
+        }
+      },
+      "SharpPcap/4.5.0": {
+        "dependencies": {
+          "PacketDotNet": "0.16.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/SharpPcap.dll": {
+            "assemblyVersion": "4.5.0.0",
+            "fileVersion": "4.5.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BugsSniffer.Api/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.NETCore.Platforms/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-kz0PEW2lhqygehI/d6XsPCQzD7ff7gUJaVGPVETX611eadGsA3A877GdSlU0LRVMCTH/+P3o2iDTak+S08V2+A==",
+      "path": "microsoft.netcore.platforms/1.1.0",
+      "hashPath": "microsoft.netcore.platforms.1.1.0.nupkg.sha512"
+    },
+    "NETStandard.Library/2.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-st47PosZSHrjECdjeIzZQbzivYBJFv6P2nv4cj2ypdI204DO+vZ7l5raGMiX4eXMJ53RfOIg+/s4DHVZ54Nu2A==",
+      "path": "netstandard.library/2.0.3",
+      "hashPath": "netstandard.library.2.0.3.nupkg.sha512"
+    },
+    "PacketDotNet/0.16.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-YCUxECxGHPJsGNqgV8DhgKklbuF+yRYqUu64zbacs1M5r+A3jU+PiTaJfUP8zmYccuMdgf7yDniKRZijQKtq9Q==",
+      "path": "packetdotnet/0.16.0",
+      "hashPath": "packetdotnet.0.16.0.nupkg.sha512"
+    },
+    "SharpPcap/4.5.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-z8Wa5XBwmygHSgUgSZEMlVXu1pNIo1qiYhYJfHdYcaEbAl6r46VzXMHsIQKhcbBADe/hT3BRA4FwF8i9qIzu5g==",
+      "path": "sharppcap/4.5.0",
+      "hashPath": "sharppcap.4.5.0.nupkg.sha512"
+    }
+  }
+}
