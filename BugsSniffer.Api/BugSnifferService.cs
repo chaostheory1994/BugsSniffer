@@ -2,7 +2,9 @@
 using Microsoft.Extensions.Logging;
 using SharpPcap;
 using System;
-using System.Net.Http;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace BugsSniffer.Api
@@ -24,16 +26,8 @@ namespace BugsSniffer.Api
             _config = config;
 
             _logger.LogInformation("Building HttpClient");
-            HttpClient client = new HttpClient();
-            string baseAddress = _config["baseAddress"];
 
-            if (!string.IsNullOrWhiteSpace(baseAddress))
-            {
-                _logger.LogInformation($"Setting base address to {baseAddress}");
-                client.BaseAddress = new Uri(baseAddress);
-            }
-
-            _fileDownloader = new FileDownloader(factory, config, client);
+            _fileDownloader = new FileDownloader(factory, config);
             _packetExtractor = new PacketExtractor(factory);
             running = false;
         }
@@ -51,35 +45,48 @@ namespace BugsSniffer.Api
                 throw new ArgumentNullException();
             }
 
-            Console.WriteLine();
-            Console.WriteLine("The following devices are available on this machine:");
-            Console.WriteLine("----------------------------------------------------");
-            Console.WriteLine();
+            string localIPAddress = LocalIPAddress()?.ToString() ?? string.Empty;
 
-            for(int i = 0; i < devices.Count; i++)
+            Console.WriteLine($"Your Local IP Address is {localIPAddress}");
+
+            if(devices.Count(device => device.ToString().Contains(localIPAddress)) == 1)
             {
-                Console.WriteLine($"-----------Device {i}-----------");
-                Console.WriteLine(devices[i].ToString());
+                _device = devices.Single(device => device.ToString().Contains(localIPAddress));
+                _logger.LogInformation("Automatically Selected Device:");
+                _logger.LogInformation(_device.ToString());
             }
-
-            Console.WriteLine("Usually device with local ip address is the correct one.");
-
-            int deviceIndex = -1;
-
-            do
+            else
             {
-                Console.Write("Please select which device you would like to use: ");
+                Console.WriteLine();
+                Console.WriteLine("The following devices are available on this machine:");
+                Console.WriteLine("----------------------------------------------------");
+                Console.WriteLine();
 
-                string input = Console.ReadLine();
+                for (int i = 0; i < devices.Count; i++)
+                {
+                    Console.WriteLine($"-----------Device {i}-----------");
+                    Console.WriteLine(devices[i].ToString());
+                }
 
-                deviceIndex = int.TryParse(input, out int result) ? result : -1;
+                Console.WriteLine("Usually device with local ip address is the correct one.");
 
-            } while (deviceIndex < 0 || deviceIndex >= devices.Count);
+                int deviceIndex = -1;
 
-            _device = devices[deviceIndex];
+                do
+                {
+                    Console.Write("Please select which device you would like to use: ");
 
-            _logger.LogInformation("Chosen Device:");
-            _logger.LogInformation(_device.ToString());
+                    string input = Console.ReadLine();
+
+                    deviceIndex = int.TryParse(input, out int result) ? result : -1;
+
+                } while (deviceIndex < 0 || deviceIndex >= devices.Count);
+
+                _device = devices[deviceIndex];
+
+                _logger.LogInformation("Chosen Device:");
+                _logger.LogInformation(_device.ToString());
+            }
 
             _logger.LogInformation("Opening Device");
             _logger.LogInformation($"Using Timeout: {Timeout}");
@@ -103,12 +110,12 @@ namespace BugsSniffer.Api
                 if (capture == null)
                     continue;
 
-                (string endpoint, string agent, string accept) = _packetExtractor.Extract(capture);
+                (string host, string endpoint, string agent, string accept) = _packetExtractor.Extract(capture);
 
                 if (endpoint == null)
                     continue;
 
-                await _fileDownloader.DownloadFile(endpoint, agent, accept);
+                Parallel.Invoke(async() => await _fileDownloader.DownloadFile(host, endpoint, agent, accept));
             }
         }
 
@@ -128,6 +135,20 @@ namespace BugsSniffer.Api
         {
             Console.WriteLine("-- Stopping capture");
             running = false;
+        }
+
+        private IPAddress LocalIPAddress()
+        {
+            if (!System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
+            {
+                return null;
+            }
+
+            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
+
+            return host
+                .AddressList
+                .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BugsSniffer
 {
-    class Program
+    static class Program
     {
 
         public static async Task Main(string[] args)

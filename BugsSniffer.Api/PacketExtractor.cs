@@ -17,13 +17,14 @@ namespace BugsSniffer.Api
             _logger = factory.CreateLogger<PacketExtractor>();
         }
 
-        public (string path, string agent, string accept) Extract(RawCapture capture)
+        public (string host, string path, string agent, string accept) Extract(RawCapture capture)
         {
             try
             {
                 string path = null;
                 string agent = null;
                 string accept = null;
+                string host = null;
                 // use PacketDotNet to parse this packet and print out
                 // its high level information
                 Packet p = Packet.ParsePacket(capture.LinkLayerType, capture.Data);
@@ -33,7 +34,7 @@ namespace BugsSniffer.Api
                 {
                     string packetData = tcpPacket.PayloadData != null ? Encoding.ASCII.GetString(tcpPacket.PayloadData) : "Empty";
 
-                    if (packetData.Contains("GET") && packetData.Contains("bp-aod.bugs.gscdn.com"))
+                    if (packetData.Contains("GET") && packetData.Contains("Icy-MetaData") && (packetData.Contains("bp-aod.bugs.gscdn.com") || packetData.Contains("bp-vod.bugs.gscdn.com")))
                     {
                         IpPacket ipPacket = (IpPacket)tcpPacket.ParentPacket;
                         _logger.LogInformation($"{capture.Timeval:hh:mm:ss,fff} Len={capture.Data.Length} {ipPacket.SourceAddress}:{tcpPacket.SourcePort}->{ipPacket.DestinationAddress}:{tcpPacket.DestinationPort}");
@@ -42,15 +43,16 @@ namespace BugsSniffer.Api
                         path = packetLines.First(x => x.Contains("GET")).Split(' ')[1].Trim();
                         agent = packetLines.First(x => x.Contains("User-Agent")).Split(' ')[1].Replace("\r", string.Empty).Trim();
                         accept = packetLines.First(x => x.Contains("Accept")).Split(' ')[1].Replace("\r", string.Empty).Trim();
+                        host = packetLines.First(x => x.Contains("Host")).Split(' ')[1].Replace("\r", string.Empty).Trim();
                     }
                 }
 
-                return (path, agent, accept);
+                return (host, path, agent, accept);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Error occured during extraction of packet.");
-                return (null, null, null);
+                return (null, null, null, null);
             }
         }
     }
