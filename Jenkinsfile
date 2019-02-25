@@ -18,7 +18,7 @@ pipeline {
     }
     stage('Publish') {
       steps {
-        sh 'dotnet publish -c Release -r win10-x64 --self-contained false -o ../artifacts'
+        sh 'dotnet publish -c Release -r win10-x64 -o ../artifacts'
         archiveArtifacts 'artifacts/*'
       }
     }
