@@ -157,7 +157,7 @@ namespace BugsSniffer.Api
 
                         Uri albumArt = new Uri(track.AlbumArtUrl);
                         string albumArtExtension = Regex.Match(track.AlbumArtUrl, "[a-zA-Z0-0]*$").Value;
-                        string albumArtPath = Path.Combine(track.Artist, track.Album, $"{track.Album}.{albumArtExtension}");
+                        string albumArtPath = Path.Combine(saveFolder, $"{track.Album}.{albumArtExtension}");
 
                         Task fileDownload = _fileDownloader.DownloadFile(host, endpoint, agent, accept, fullPath);
                         Task albumArtDownload = _fileDownloader.DownloadFile(albumArt.Host, albumArt.PathAndQuery, agent, accept, albumArtPath);
