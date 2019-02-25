@@ -1,10 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using BugsSniffer.Api.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SharpPcap;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace BugsSniffer.Api
@@ -15,6 +18,9 @@ namespace BugsSniffer.Api
         private readonly PacketExtractor _packetExtractor;
         private readonly ILogger<BugSnifferService> _logger;
         private readonly IConfiguration _config;
+        private readonly MetadataResolver.MetadataResolver _metadataResolver;
+        private readonly MetadataApplier.MetadataApplier _metadataApplier;
+        private string outputDir => Environment.ExpandEnvironmentVariables(_config["outputDir"]);
         private ICaptureDevice _device;
         private bool running;
 
@@ -25,10 +31,14 @@ namespace BugsSniffer.Api
             _logger = factory.CreateLogger<BugSnifferService>();
             _config = config;
 
+            _logger.LogInformation($"Downloading Files to {outputDir}");
+
             _logger.LogInformation("Building HttpClient");
 
-            _fileDownloader = new FileDownloader(factory, config);
+            _fileDownloader = new FileDownloader(factory);
             _packetExtractor = new PacketExtractor(factory);
+            _metadataResolver = new MetadataResolver.MetadataResolver(factory);
+            _metadataApplier = new MetadataApplier.MetadataApplier(factory);
             running = false;
         }
 
@@ -115,7 +125,68 @@ namespace BugsSniffer.Api
                 if (endpoint == null)
                     continue;
 
-                Parallel.Invoke(async() => await _fileDownloader.DownloadFile(host, endpoint, agent, accept));
+                Parallel.Invoke(async() => await GetFile(host, endpoint, agent, accept));
+            }
+        }
+
+        private async Task GetFile(string host, string endpoint, string agent, string accept)
+        {
+            try
+            {
+                string filename = Regex.Match(endpoint, @"[a-zA-Z0-9]*\.((mp4)|(flac))").Value;
+                string extension = Path.GetExtension(filename);
+                string id = filename.Split('.')[0];
+
+                Metadata meta = await _metadataResolver.GetMetadata(filename);
+
+                string saveFolder = outputDir;
+                string fullPath = Path.Combine(saveFolder, filename);
+
+                switch (meta)
+                {
+                    case Track track:
+                        _logger.LogInformation($"Downloading song with metadata: {filename} => {track.FileName}{extension}");
+                        saveFolder = Path.Combine(outputDir, track.Artist, track.Album);
+                        fullPath = Path.Combine(saveFolder, $"{track.FileName}{extension}");
+
+                        if (!Directory.Exists(saveFolder))
+                        {
+                            _logger.LogInformation($"Building folder for file: {saveFolder}");
+                            Directory.CreateDirectory(saveFolder);
+                        }
+
+                        Uri albumArt = new Uri(track.AlbumArtUrl);
+                        string albumArtExtension = Regex.Match(track.AlbumArtUrl, "[a-zA-Z0-0]*$").Value;
+                        string albumArtPath = Path.Combine(track.Artist, track.Album, $"{track.Album}.{albumArtExtension}");
+
+                        Task fileDownload = _fileDownloader.DownloadFile(host, endpoint, agent, accept, fullPath);
+                        Task albumArtDownload = _fileDownloader.DownloadFile(albumArt.Host, albumArt.PathAndQuery, agent, accept, albumArtPath);
+
+                        Task.WaitAll(fileDownload, albumArtDownload);
+
+                        await _metadataApplier.ApplyMetadata(saveFolder, $"{track.FileName}{extension}", track);
+
+                        break;
+                    case Movie movie:
+                        saveFolder = Path.Combine(outputDir, movie.Artist);
+                        fullPath = Path.Combine(saveFolder, $"{movie.FileName}{extension}");
+
+                        if (!Directory.Exists(saveFolder))
+                        {
+                            _logger.LogInformation($"Building folder for file: {saveFolder}");
+                            Directory.CreateDirectory(saveFolder);
+                        }
+
+                        await _fileDownloader.DownloadFile(host, endpoint, agent, accept, fullPath);
+                        break;
+                    default:
+                        await _fileDownloader.DownloadFile(host, endpoint, agent, accept, fullPath);
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "An error occured while trying to get the file.");
             }
         }
 
